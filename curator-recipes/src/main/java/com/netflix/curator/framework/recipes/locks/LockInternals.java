@@ -293,9 +293,9 @@ public class LockInternals
 
                     synchronized(this)
                     {
-                        Stat stat = client.checkExists().usingWatcher(watcher).forPath(previousSequencePath);
-                        if ( stat != null )
+                        try
                         {
+                            client.getData().usingWatcher(watcher).forPath(previousSequencePath);
                             if ( millisToWait != null )
                             {
                                 millisToWait -= (System.currentTimeMillis() - startMillis);
@@ -313,6 +313,13 @@ public class LockInternals
                                 wait();
                             }
                         }
+                    	catch ( KeeperException.NoNodeException e ) 
+                    	{
+                    		// ignore - clearly already deleted
+                    	} catch (Exception e)
+                    	{
+                    		throw e;
+                    	}
                     }
                     // else it may have been deleted (i.e. lock released). Try to acquire again
                 }
